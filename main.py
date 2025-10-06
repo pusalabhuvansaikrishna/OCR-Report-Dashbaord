@@ -27,9 +27,16 @@ def get_cas_data(df):
     return dict(sorted(cas.items(), key=lambda item:item[1], reverse=True))
 
 def get_model_stats(df,selected):
-    model1, model2=selected[0]['x'].split("and")
-    subset_df=df[(df['Layout Model']==model1.strip()) & (df['OCR Model']==model2.strip())]
+    model=selected[0]['x']
+    if "and" in model:
+        model1, model2=model.split("and")
+    else:
+        model1, model2=model, model
+    subset_df = df[(df['Layout Model'] == model1.strip()) & (df['OCR Model'] == model2.strip())]
     return {"avg_crr":subset_df['CRR'].mean(),"avg_wrr":subset_df['WRR'].mean(),"total_subst":int(subset_df['Substitutions'].sum()),"total_inrst":int(subset_df['Insertions'].sum()),"total_del":int(subset_df['Deletions'].sum())}
+
+#def get_access(df, selected):
+
 
 st.title('OCR REPORT DASHBOARD 📊')
 
@@ -70,3 +77,4 @@ if uploaded_file:
         col3.metric("Total Deletions",value=models_stats['total_del'], help="The Total Count of characters that OCR Model completely deleted", label_visibility="visible", border=True,height="stretch", width="stretch")
     else:
         st.info("Select a bar to see the model's stats.", icon='ℹ️')
+
