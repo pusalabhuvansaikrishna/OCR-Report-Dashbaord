@@ -4,13 +4,19 @@ import plotly.express as px
 import plotly.graph_objects as go
 from streamlit_plotly_events import plotly_events
 import os
+
+#Setting up the Page Configuration
 st.set_page_config(page_title='OCR Report Dashboard', page_icon="📊",layout="wide",initial_sidebar_state=None)
+
+#Will check weather do we have the Dataframe of choosen Models
 def check_data(df, model1, model2):
     resulted_df=df[(df['Layout Model']==model1) & (df['OCR Model']==model2)]
     if (resulted_df.shape)[0]!=0:
         return True
     else:
         return False
+
+#Will Generate the CAS Score of the Models in the Uploaded File, This CAS Score is used in generating the bar graph
 def get_cas_data(df):
     cas={}
     models_list=[]
@@ -26,6 +32,7 @@ def get_cas_data(df):
                 pass
     return dict(sorted(cas.items(), key=lambda item:item[1], reverse=True))
 
+#This is will generate the stats of the selected model in the Bar Chart.
 def get_model_stats(df,selected):
     model=selected[0]['x']
     if "and" in model:
@@ -34,8 +41,6 @@ def get_model_stats(df,selected):
         model1, model2=model, model
     subset_df = df[(df['Layout Model'] == model1.strip()) & (df['OCR Model'] == model2.strip())]
     return {"avg_crr":subset_df['CRR'].mean(),"avg_wrr":subset_df['WRR'].mean(),"total_subst":int(subset_df['Substitutions'].sum()),"total_inrst":int(subset_df['Insertions'].sum()),"total_del":int(subset_df['Deletions'].sum())}
-
-#def get_access(df, selected):
 
 
 st.title('OCR REPORT DASHBOARD 📊')
@@ -59,8 +64,10 @@ if uploaded_file:
             ocr_models_list=sorted(set(main_columns['OCR Model']))
             for i in range(len(ocr_models_list)):
                 st.write(f"{i+1}. {ocr_models_list[i]}")
+
     st.warning("""
             The graph is plotted against the new variable, CAS (Composite Accuracy Score), calculated as ***(0.5 × WRR + 0.5 × CRR)***, where 0.5 indicates equal weightage for both components.""")
+
     fig=px.bar(pd.DataFrame({"Models":list(get_cas_data(main_columns).keys()), "Values":list(get_cas_data(main_columns).values())}),x="Models", y="Values",orientation="v",title="Layout and OCR Model Performance wrt CRR and WRR",color='Values',color_continuous_scale="darkmint",text="Values", width=1500,height=400)
     fig.update_xaxes(tickfont=dict(size=8))
     selected_bar=plotly_events(fig, click_event=True)
